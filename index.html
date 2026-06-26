@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Мои платежи</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    :root {
+      --bg: #0f0f1a;
+      --card: #1a1a2e;
+      --border: rgba(255,255,255,0.08);
+      --accent: #4f8ef7;
+      --accent2: #7c5ef7;
+      --green: #3ecf8e;
+      --red: #f76f6f;
+      --text: #f0f0f0;
+      --muted: rgba(255,255,255,0.45);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 16px;
+      padding-bottom: 100px;
+    }
+
+    /* HEADER */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-top: 8px;
+    }
+
+    .header h1 {
+      font-size: 1.4em;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .month-badge {
+      font-size: 0.8em;
+      color: var(--muted);
+      background: var(--card);
+      border: 1px solid var(--border);
+      padding: 4px 12px;
+      border-radius: 20px;
+    }
+
+    /* STATS */
+    .stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+    }
+
+    .stat-card.full { grid-column: 1 / -1; }
+
+    .stat-label {
+      font-size: 0.72em;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 6px;
+    }
+
+    .stat-value {
+      font-size: 1.6em;
+      font-weight: 700;
+    }
+
+    .stat-value.blue { color: var(--accent); }
+    .stat-value.green { color: var(--green); }
+    .stat-value.red { color: var(--red); }
+
+    .progress-bar {
+      height: 4px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 2px;
+      margin-top: 10px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--green));
+      border-radius: 2px;
+      transition: width 0.5s ease;
+    }
+
+    /* FORM */
+    .form-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 20px;
+    }
+
+    .form-card h2 {
+      font-size: 0.9em;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 12px;
+    }
+
+    .form-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    input {
+      flex: 1;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-size: 0.95em;
+      padding: 10px 12px;
+      outline: none;
+      transition: border-color 0.2s;
+      min-width: 0;
+    }
+
+    input:focus { border-color: var(--accent); }
+    input::placeholder { color: var(--muted); }
+
+    input.small { max-width: 90px; }
+
+    .btn-add {
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border: none;
+      border-radius: 10px;
+      color: #fff;
+      font-size: 0.95em;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+
+    .btn-add:active { transform: scale(0.98); opacity: 0.85; }
+
+    /* LIST */
+    .section-title {
+      font-size: 0.75em;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 10px;
+    }
+
+    .payments-list { display: flex; flex-direction: column; gap: 8px; }
+
+    .payment-item {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: opacity 0.3s;
+    }
+
+    .payment-item.paid {
+      opacity: 0.5;
+    }
+
+    .pay-checkbox {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 2px solid var(--border);
+      cursor: pointer;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      font-size: 0.8em;
+    }
+
+    .pay-checkbox.checked {
+      background: var(--green);
+      border-color: var(--green);
+    }
+
+    .pay-info { flex: 1; min-width: 0; }
+
+    .pay-name {
+      font-size: 0.95em;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .pay-meta {
+      font-size: 0.75em;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .pay-amount {
+      font-size: 1em;
+      font-weight: 700;
+      color: var(--accent);
+      flex-shrink: 0;
+    }
+
+    .pay-delete {
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 1.1em;
+      padding: 4px;
+      flex-shrink: 0;
+      transition: color 0.2s;
+    }
+
+    .pay-delete:hover { color: var(--red); }
+
+    .empty {
+      text-align: center;
+      padding: 30px;
+      color: var(--muted);
+      font-size: 0.9em;
+    }
+
+    /* RESET BUTTON */
+    .reset-btn {
+      width: 100%;
+      margin-top: 16px;
+      padding: 10px;
+      background: rgba(247,111,111,0.1);
+      border: 1px solid rgba(247,111,111,0.3);
+      border-radius: 10px;
+      color: var(--red);
+      font-size: 0.85em;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .reset-btn:hover { background: rgba(247,111,111,0.2); }
+
+    /* TOAST */
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: #1e2a3a;
+      border: 1px solid var(--accent);
+      color: var(--text);
+      padding: 10px 20px;
+      border-radius: 20px;
+      font-size: 0.85em;
+      transition: transform 0.3s ease;
+      z-index: 999;
+      white-space: nowrap;
+    }
+
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    .loader {
+      text-align: center;
+      padding: 40px;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <h1>💳 Мои платежи</h1>
+  <div class="month-badge" id="monthBadge">—</div>
+</div>
+
+<div class="stats">
+  <div class="stat-card">
+    <div class="stat-label">Всего в месяц</div>
+    <div class="stat-value blue" id="statTotal">₽0</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Платежей</div>
+    <div class="stat-value blue" id="statCount">0</div>
+  </div>
+  <div class="stat-card full">
+    <div class="stat-label">Прогресс оплаты</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <div class="stat-value green" id="statPaid">₽0</div>
+      <div style="color:var(--muted);font-size:0.85em;" id="statPercent">0%</div>
+    </div>
+    <div class="progress-bar">
+      <div class="progress-fill" id="progressFill" style="width:0%"></div>
+    </div>
+  </div>
+</div>
+
+<div class="form-card">
+  <h2>Добавить платеж</h2>
+  <div class="form-row">
+    <input type="text" id="inputName" placeholder="Название (интернет, аренда...)" />
+  </div>
+  <div class="form-row">
+    <input type="number" id="inputAmount" placeholder="Сумма ₽" min="0" />
+    <input type="number" id="inputDay" placeholder="День" min="1" max="31" class="small" />
+  </div>
+  <button class="btn-add" onclick="addPayment()">+ Добавить</button>
+</div>
+
+<div class="section-title">Список платежей</div>
+<div class="payments-list" id="paymentsList">
+  <div class="loader">Загрузка...</div>
+</div>
+
+<button class="reset-btn" onclick="resetMonth()">🔄 Сбросить статусы оплат (новый месяц)</button>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  // ===== КОНФИГ =====
+  const SUPABASE_URL = 'https://ybtgyxtumztndrtevxmx.supabase.co/rest/v1/';   // вставь свой
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlidGd5eHR1bXp0bmRydGV2eG14Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0NjMzNTIsImV4cCI6MjA5ODAzOTM1Mn0.981hvM0ySTAb68XXAVeBFcSLIVCMwb3IIIWC4kI5xU8'; // вставь свой
+
+  // ===== TELEGRAM =====
+  const tg = window.Telegram?.WebApp;
+  if (tg) {
+    tg.ready();
+    tg.expand();
+  }
+  const userId = tg?.initDataUnsafe?.user?.id || 'test_user';
+
+  // ===== SUPABASE HELPERS =====
+  async function sbFetch(method, path, body = null) {
+    const opts = {
+      method,
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + SUPABASE_KEY,
+        'Content-Type': 'application/json',
+        'Prefer': method === 'POST' ? 'return=representation' : ''
+      }
+    };
+    if (body) opts.body = JSON.stringify(body);
+    const res = await fetch(SUPABASE_URL + '/rest/v1/' + path, opts);
+    if (!res.ok) throw new Error(await res.text());
+    const text = await res.text();
+    return text ? JSON.parse(text) : null;
+  }
+
+  async function getPayments() {
+    return sbFetch('GET', `payments?user_id=eq.${userId}&order=day_of_month.asc`);
+  }
+
+  async function createPayment(data) {
+    return sbFetch('POST', 'payments', { ...data, user_id: String(userId) });
+  }
+
+  async function updatePayment(id, data) {
+    return sbFetch('PATCH', `payments?id=eq.${id}`, data);
+  }
+
+  async function deletePayment(id) {
+    return sbFetch('DELETE', `payments?id=eq.${id}`);
+  }
+
+  // ===== STATE =====
+  let payments = [];
+
+  // ===== RENDER =====
+  function renderPayments() {
+    const container = document.getElementById('paymentsList');
+
+    if (payments.length === 0) {
+      container.innerHTML = '<div class="empty">Нет платежей. Добавь первый! 👆</div>';
+    } else {
+      container.innerHTML = payments.map(p => `
+        <div class="payment-item ${p.paid ? 'paid' : ''}" id="item-${p.id}">
+          <div class="pay-checkbox ${p.paid ? 'checked' : ''}" onclick="togglePaid(${p.id}, ${p.paid})">
+            ${p.paid ? '✓' : ''}
+          </div>
+          <div class="pay-info">
+            <div class="pay-name">${p.name}</div>
+            <div class="pay-meta">${p.day_of_month} числа каждого месяца</div>
+          </div>
+          <div class="pay-amount">₽${Number(p.amount).toLocaleString('ru-RU')}</div>
+          <button class="pay-delete" onclick="removePayment(${p.id})">✕</button>
+        </div>
+      `).join('');
+    }
+
+    // stats
+    const total = payments.reduce((s, p) => s + Number(p.amount), 0);
+    const paid = payments.filter(p => p.paid).reduce((s, p) => s + Number(p.amount), 0);
+    const pct = total > 0 ? Math.round(paid / total * 100) : 0;
+
+    document.getElementById('statTotal').textContent = '₽' + total.toLocaleString('ru-RU');
+    document.getElementById('statCount').textContent = payments.length;
+    document.getElementById('statPaid').textContent = '₽' + paid.toLocaleString('ru-RU');
+    document.getElementById('statPercent').textContent = pct + '%';
+    document.getElementById('progressFill').style.width = pct + '%';
+
+    const months = ['Январь','Февраль','Март','Апрель','Май','Июнь',
+                    'Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+    document.getElementById('monthBadge').textContent = months[new Date().getMonth()];
+  }
+
+  // ===== ACTIONS =====
+  async function addPayment() {
+    const name = document.getElementById('inputName').value.trim();
+    const amount = parseFloat(document.getElementById('inputAmount').value);
+    const day = parseInt(document.getElementById('inputDay').value);
+
+    if (!name || !amount || !day || amount <= 0 || day < 1 || day > 31) {
+      showToast('⚠️ Заполни все поля корректно');
+      return;
+    }
+
+    try {
+      const result = await createPayment({ name, amount, day_of_month: day, paid: false });
+      payments.push(result[0]);
+      payments.sort((a, b) => a.day_of_month - b.day_of_month);
+      document.getElementById('inputName').value = '';
+      document.getElementById('inputAmount').value = '';
+      document.getElementById('inputDay').value = '';
+      renderPayments();
+      showToast('✅ Платеж добавлен');
+    } catch (e) {
+      showToast('❌ Ошибка: ' + e.message);
+    }
+  }
+
+  async function togglePaid(id, currentPaid) {
+    try {
+      await updatePayment(id, { paid: !currentPaid });
+      const p = payments.find(x => x.id === id);
+      if (p) p.paid = !currentPaid;
+      renderPayments();
+      showToast(currentPaid ? '↩️ Отмечено как неоплачено' : '✅ Оплачено!');
+    } catch (e) {
+      showToast('❌ Ошибка');
+    }
+  }
+
+  async function removePayment(id) {
+    if (!confirm('Удалить платеж?')) return;
+    try {
+      await deletePayment(id);
+      payments = payments.filter(p => p.id !== id);
+      renderPayments();
+      showToast('🗑 Удалено');
+    } catch (e) {
+      showToast('❌ Ошибка');
+    }
+  }
+
+  async function resetMonth() {
+    if (!confirm('Сбросить все статусы оплаты? (начало нового месяца)')) return;
+    try {
+      for (const p of payments.filter(x => x.paid)) {
+        await updatePayment(p.id, { paid: false });
+        p.paid = false;
+      }
+      renderPayments();
+      showToast('🔄 Статусы сброшены');
+    } catch (e) {
+      showToast('❌ Ошибка');
+    }
+  }
+
+  // ===== TOAST =====
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+  }
+
+  // ===== INIT =====
+  async function init() {
+    try {
+      payments = await getPayments();
+      renderPayments();
+    } catch (e) {
+      document.getElementById('paymentsList').innerHTML =
+        '<div class="empty">❌ Ошибка подключения к базе данных</div>';
+    }
+  }
+
+  init();
+</script>
+</body>
+</html>
