@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Мои платежи</title>
+  <title>Личный трекер</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     :root {
@@ -26,7 +26,7 @@
       color: var(--text);
       min-height: 100vh;
       padding: 16px;
-      padding-bottom: 100px;
+      padding-bottom: 80px;
     }
 
     /* HEADER */
@@ -102,7 +102,7 @@
       height: 100%;
       background: linear-gradient(90deg, var(--accent), var(--green));
       border-radius: 2px;
-      transition: width 0.5s ease;
+      transition: width 0.6s ease;
     }
 
     /* FORM */
@@ -128,7 +128,7 @@
       margin-bottom: 8px;
     }
 
-    input {
+    input, select {
       flex: 1;
       background: rgba(255,255,255,0.05);
       border: 1px solid var(--border);
@@ -141,10 +141,12 @@
       min-width: 0;
     }
 
-    input:focus { border-color: var(--accent); }
+    input:focus, select:focus { border-color: var(--accent); }
     input::placeholder { color: var(--muted); }
+    select option { background: var(--card); color: var(--text); }
 
     input.small { max-width: 90px; }
+    select.emoji { max-width: 80px; text-align: center; }
 
     .btn-add {
       width: 100%;
@@ -181,6 +183,7 @@
       align-items: center;
       gap: 12px;
       transition: opacity 0.3s;
+      animation: fadeIn 0.3s ease;
     }
 
     .payment-item.paid {
@@ -268,7 +271,7 @@
     /* TOAST */
     .toast {
       position: fixed;
-      bottom: 20px;
+      bottom: 86px;
       left: 50%;
       transform: translateX(-50%) translateY(100px);
       background: #1e2a3a;
@@ -289,54 +292,449 @@
       padding: 40px;
       color: var(--muted);
     }
+
+    /* ===== TABS ===== */
+    .tab-section { display: none; }
+    .tab-section.active { display: block; animation: fadeIn 0.25s ease; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ===== BOTTOM NAV ===== */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 64px;
+      background: rgba(26,26,46,0.96);
+      backdrop-filter: blur(12px);
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      z-index: 500;
+    }
+
+    .nav-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      padding: 6px 0;
+      cursor: pointer;
+      color: var(--muted);
+      transition: color 0.2s;
+      user-select: none;
+    }
+
+    .nav-item .nav-icon { font-size: 1.3em; line-height: 1; }
+    .nav-item .nav-label { font-size: 0.65em; font-weight: 600; }
+    .nav-item.active { color: var(--accent); }
+
+    /* ===== SEGMENTED TOGGLE ===== */
+    .segmented {
+      display: flex;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 4px;
+      margin-bottom: 16px;
+      gap: 4px;
+    }
+
+    .seg-btn {
+      flex: 1;
+      padding: 9px;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font-size: 0.88em;
+      font-weight: 600;
+      border-radius: 9px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .seg-btn.active {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff;
+    }
+
+    /* ===== GOALS ===== */
+    .goals-list { display: flex; flex-direction: column; gap: 8px; }
+
+    .goal-item {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      animation: fadeIn 0.3s ease;
+      transition: opacity 0.3s;
+    }
+
+    .goal-check {
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      border: 2px solid var(--border);
+      cursor: pointer;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      font-size: 0.8em;
+    }
+
+    .goal-check.checked {
+      background: var(--green);
+      border-color: var(--green);
+    }
+
+    .goal-info { flex: 1; min-width: 0; }
+
+    .goal-text {
+      font-size: 0.95em;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    .goal-item.completed .goal-text {
+      text-decoration: line-through;
+      color: var(--green);
+    }
+
+    .goal-deadline {
+      font-size: 0.74em;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .goal-item.completed .goal-deadline { color: var(--green); }
+
+    /* ===== FINANCE ===== */
+    .finance-list { display: flex; flex-direction: column; gap: 12px; }
+
+    .fin-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      animation: fadeIn 0.3s ease;
+      transition: border-color 0.3s, background 0.3s;
+    }
+
+    .fin-card.complete {
+      border-color: var(--green);
+      background: rgba(62,207,142,0.08);
+    }
+
+    .fin-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .fin-emoji { font-size: 1.4em; }
+    .fin-name { font-size: 1em; font-weight: 700; flex: 1; }
+    .fin-celebrate { font-size: 1.3em; }
+
+    .fin-progress-track {
+      height: 10px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 6px;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+
+    .fin-progress-fill {
+      height: 100%;
+      width: 0;
+      background: linear-gradient(90deg, var(--accent), var(--green));
+      border-radius: 6px;
+      transition: width 0.7s ease;
+    }
+
+    .fin-amounts {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.85em;
+      margin-bottom: 12px;
+    }
+
+    .fin-amounts .pct { font-weight: 700; color: var(--accent); }
+    .fin-card.complete .fin-amounts .pct { color: var(--green); }
+    .fin-amounts .amt { color: var(--muted); }
+
+    .fin-actions { display: flex; gap: 8px; }
+
+    .fin-btn {
+      flex: 1;
+      padding: 9px;
+      border-radius: 9px;
+      font-size: 0.82em;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.05);
+      color: var(--text);
+      transition: all 0.2s;
+    }
+
+    .fin-btn.topup { border-color: rgba(79,142,247,0.4); color: var(--accent); }
+    .fin-btn.del { border-color: rgba(247,111,111,0.3); color: var(--red); }
+    .fin-btn:active { transform: scale(0.97); }
+
+    .fin-topup-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .fin-topup-row input { flex: 1; }
+
+    .fin-topup-ok {
+      padding: 10px 16px;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--accent), var(--green));
+      color: #fff;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .hidden { display: none !important; }
+
+    /* ===== DASHBOARD ===== */
+    .dash-greeting {
+      margin-bottom: 20px;
+    }
+    .dash-greeting .hi { font-size: 1.5em; font-weight: 700; }
+    .dash-greeting .date { color: var(--muted); font-size: 0.85em; margin-top: 4px; }
+
+    .dash-block {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 14px;
+    }
+
+    .dash-block h3 {
+      font-size: 0.75em;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 12px;
+    }
+
+    .dash-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.9em;
+      padding: 6px 0;
+    }
+    .dash-row .label { color: var(--muted); }
+    .dash-row .val { font-weight: 600; }
+
+    .dash-mini {
+      margin: 10px 0;
+    }
+    .dash-mini .mini-top {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.82em;
+      margin-bottom: 5px;
+    }
+    .dash-mini .mini-name { font-weight: 600; }
+    .dash-mini .mini-pct { color: var(--muted); }
+
+    .quote-card {
+      background: linear-gradient(135deg, rgba(79,142,247,0.15), rgba(124,94,247,0.15));
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px;
+      text-align: center;
+      font-size: 0.95em;
+      font-weight: 600;
+      line-height: 1.4;
+      margin-bottom: 14px;
+    }
   </style>
 </head>
 <body>
 
-<div class="header">
-  <h1>💳 Мои платежи</h1>
-  <div class="month-badge" id="monthBadge">—</div>
-</div>
+<!-- ============ TAB: ПЛАТЕЖИ ============ -->
+<div id="tab-payments" class="tab-section">
+  <div class="header">
+    <h1>💳 Мои платежи</h1>
+    <div class="month-badge" id="monthBadge">—</div>
+  </div>
 
-<div class="stats">
-  <div class="stat-card">
-    <div class="stat-label">Всего в месяц</div>
-    <div class="stat-value blue" id="statTotal">₽0</div>
-  </div>
-  <div class="stat-card">
-    <div class="stat-label">Платежей</div>
-    <div class="stat-value blue" id="statCount">0</div>
-  </div>
-  <div class="stat-card full">
-    <div class="stat-label">Прогресс оплаты</div>
-    <div style="display:flex;justify-content:space-between;align-items:center;">
-      <div class="stat-value green" id="statPaid">₽0</div>
-      <div style="color:var(--muted);font-size:0.85em;" id="statPercent">0%</div>
+  <div class="stats">
+    <div class="stat-card">
+      <div class="stat-label">Всего в месяц</div>
+      <div class="stat-value blue" id="statTotal">₽0</div>
     </div>
-    <div class="progress-bar">
-      <div class="progress-fill" id="progressFill" style="width:0%"></div>
+    <div class="stat-card">
+      <div class="stat-label">Платежей</div>
+      <div class="stat-value blue" id="statCount">0</div>
+    </div>
+    <div class="stat-card full">
+      <div class="stat-label">Прогресс оплаты</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div class="stat-value green" id="statPaid">₽0</div>
+        <div style="color:var(--muted);font-size:0.85em;" id="statPercent">0%</div>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill" style="width:0%"></div>
+      </div>
     </div>
   </div>
-</div>
 
-<div class="form-card">
-  <h2>Добавить платеж</h2>
-  <div class="form-row">
-    <input type="text" id="inputName" placeholder="Название (интернет, аренда...)" />
+  <div class="form-card">
+    <h2>Добавить платеж</h2>
+    <div class="form-row">
+      <input type="text" id="inputName" placeholder="Название (интернет, аренда...)" />
+    </div>
+    <div class="form-row">
+      <input type="number" id="inputAmount" placeholder="Сумма ₽" min="0" />
+      <input type="number" id="inputDay" placeholder="День" min="1" max="31" class="small" />
+    </div>
+    <button class="btn-add" onclick="addPayment()">+ Добавить</button>
   </div>
-  <div class="form-row">
-    <input type="number" id="inputAmount" placeholder="Сумма ₽" min="0" />
-    <input type="number" id="inputDay" placeholder="День" min="1" max="31" class="small" />
+
+  <div class="section-title">Список платежей</div>
+  <div class="payments-list" id="paymentsList">
+    <div class="loader">Загрузка...</div>
   </div>
-  <button class="btn-add" onclick="addPayment()">+ Добавить</button>
+
+  <button class="reset-btn" onclick="resetMonth()">🔄 Сбросить статусы оплат (новый месяц)</button>
 </div>
 
-<div class="section-title">Список платежей</div>
-<div class="payments-list" id="paymentsList">
-  <div class="loader">Загрузка...</div>
+<!-- ============ TAB: ЦЕЛИ ============ -->
+<div id="tab-goals" class="tab-section">
+  <div class="header">
+    <h1>🎯 Мои цели</h1>
+  </div>
+
+  <div class="segmented">
+    <button class="seg-btn active" id="segYear" onclick="setGoalFilter('year')">На год</button>
+    <button class="seg-btn" id="segNearest" onclick="setGoalFilter('nearest')">Ближайшие</button>
+  </div>
+
+  <div class="form-card">
+    <h2>Новая цель</h2>
+    <div class="form-row">
+      <input type="text" id="goalText" placeholder="Текст цели..." />
+    </div>
+    <div class="form-row">
+      <select id="goalType">
+        <option value="year">На год</option>
+        <option value="nearest">Ближайшая</option>
+      </select>
+      <input type="date" id="goalDeadline" />
+    </div>
+    <button class="btn-add" onclick="addGoal()">+ Добавить</button>
+  </div>
+
+  <div class="goals-list" id="goalsList">
+    <div class="loader">Загрузка...</div>
+  </div>
 </div>
 
-<button class="reset-btn" onclick="resetMonth()">🔄 Сбросить статусы оплат (новый месяц)</button>
+<!-- ============ TAB: ФИНАНСЫ ============ -->
+<div id="tab-finance" class="tab-section">
+  <div class="header">
+    <h1>💰 Копилки</h1>
+  </div>
+
+  <div class="stats">
+    <div class="stat-card">
+      <div class="stat-label">Всего целей</div>
+      <div class="stat-value blue" id="finCount">0</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Накоплено</div>
+      <div class="stat-value green" id="finSaved">₽0</div>
+    </div>
+    <div class="stat-card full">
+      <div class="stat-label">Общая сумма целей</div>
+      <div class="stat-value blue" id="finTarget">₽0</div>
+    </div>
+  </div>
+
+  <div class="form-card">
+    <h2>Новая копилка</h2>
+    <div class="form-row">
+      <input type="text" id="finName" placeholder="Название (Автошкола...)" />
+    </div>
+    <div class="form-row">
+      <input type="number" id="finAmount" placeholder="Целевая сумма ₽" min="0" />
+      <select id="finEmoji" class="emoji">
+        <option>🚗</option><option>📚</option><option>✈️</option><option>💻</option>
+        <option>🏠</option><option>👟</option><option>🎮</option><option>💊</option>
+        <option>🎓</option><option>➕</option>
+      </select>
+    </div>
+    <button class="btn-add" onclick="addFinanceGoal()">+ Добавить цель</button>
+  </div>
+
+  <div class="finance-list" id="financeList">
+    <div class="loader">Загрузка...</div>
+  </div>
+</div>
+
+<!-- ============ TAB: ДАШБОРД ============ -->
+<div id="tab-dashboard" class="tab-section">
+  <div class="dash-greeting">
+    <div class="hi">Привет! 👋</div>
+    <div class="date" id="dashDate">—</div>
+  </div>
+
+  <div class="quote-card" id="dashQuote">—</div>
+
+  <div class="dash-block">
+    <h3>💳 Платежи этого месяца</h3>
+    <div id="dashPayments"><div class="loader">Загрузка...</div></div>
+  </div>
+
+  <div class="dash-block">
+    <h3>🎯 Цели</h3>
+    <div id="dashGoals"><div class="loader">Загрузка...</div></div>
+  </div>
+
+  <div class="dash-block">
+    <h3>💰 Финансовые цели</h3>
+    <div id="dashFinance"><div class="loader">Загрузка...</div></div>
+  </div>
+</div>
+
+<!-- ============ BOTTOM NAV ============ -->
+<nav class="bottom-nav">
+  <div class="nav-item" data-tab="tab-payments" onclick="switchTab('tab-payments')">
+    <span class="nav-icon">💳</span><span class="nav-label">Платежи</span>
+  </div>
+  <div class="nav-item" data-tab="tab-goals" onclick="switchTab('tab-goals')">
+    <span class="nav-icon">🎯</span><span class="nav-label">Цели</span>
+  </div>
+  <div class="nav-item" data-tab="tab-finance" onclick="switchTab('tab-finance')">
+    <span class="nav-icon">💰</span><span class="nav-label">Финансы</span>
+  </div>
+  <div class="nav-item" data-tab="tab-dashboard" onclick="switchTab('tab-dashboard')">
+    <span class="nav-icon">📊</span><span class="nav-label">Дашборд</span>
+  </div>
+</nav>
 
 <div class="toast" id="toast"></div>
 
@@ -371,26 +769,54 @@
     return text ? JSON.parse(text) : null;
   }
 
+  // ===== HELPERS =====
+  const fmt = n => '₽' + Number(n).toLocaleString('ru-RU');
+  const shortMonths = ['янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'];
+
+  function formatDeadline(dateStr) {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    if (isNaN(d)) return '';
+    return 'до ' + d.getDate() + ' ' + shortMonths[d.getMonth()];
+  }
+
+  // ===== TOAST =====
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+  }
+
+  // ===== TABS / NAVIGATION =====
+  function switchTab(tabId) {
+    document.querySelectorAll('.tab-section').forEach(s =>
+      s.classList.toggle('active', s.id === tabId));
+    document.querySelectorAll('.nav-item').forEach(n =>
+      n.classList.toggle('active', n.dataset.tab === tabId));
+    localStorage.setItem('activeTab', tabId);
+
+    if (tabId === 'tab-goals' && !goalsLoaded) loadGoals();
+    if (tabId === 'tab-finance' && !financeLoaded) loadFinance();
+    if (tabId === 'tab-dashboard') renderDashboard();
+  }
+
+  /* ================= ПЛАТЕЖИ ================= */
+  let payments = [];
+
   async function getPayments() {
     return sbFetch('GET', `payments?user_id=eq.${userId}&order=day_of_month.asc`);
   }
-
   async function createPayment(data) {
     return sbFetch('POST', 'payments', { ...data, user_id: String(userId) });
   }
-
   async function updatePayment(id, data) {
     return sbFetch('PATCH', `payments?id=eq.${id}`, data);
   }
-
   async function deletePayment(id) {
     return sbFetch('DELETE', `payments?id=eq.${id}`);
   }
 
-  // ===== STATE =====
-  let payments = [];
-
-  // ===== RENDER =====
   function renderPayments() {
     const container = document.getElementById('paymentsList');
 
@@ -406,20 +832,19 @@
             <div class="pay-name">${p.name}</div>
             <div class="pay-meta">${p.day_of_month} числа каждого месяца</div>
           </div>
-          <div class="pay-amount">₽${Number(p.amount).toLocaleString('ru-RU')}</div>
+          <div class="pay-amount">${fmt(p.amount)}</div>
           <button class="pay-delete" onclick="removePayment(${p.id})">✕</button>
         </div>
       `).join('');
     }
 
-    // stats
     const total = payments.reduce((s, p) => s + Number(p.amount), 0);
     const paid = payments.filter(p => p.paid).reduce((s, p) => s + Number(p.amount), 0);
     const pct = total > 0 ? Math.round(paid / total * 100) : 0;
 
-    document.getElementById('statTotal').textContent = '₽' + total.toLocaleString('ru-RU');
+    document.getElementById('statTotal').textContent = fmt(total);
     document.getElementById('statCount').textContent = payments.length;
-    document.getElementById('statPaid').textContent = '₽' + paid.toLocaleString('ru-RU');
+    document.getElementById('statPaid').textContent = fmt(paid);
     document.getElementById('statPercent').textContent = pct + '%';
     document.getElementById('progressFill').style.width = pct + '%';
 
@@ -428,7 +853,6 @@
     document.getElementById('monthBadge').textContent = months[new Date().getMonth()];
   }
 
-  // ===== ACTIONS =====
   async function addPayment() {
     const name = document.getElementById('inputName').value.trim();
     const amount = parseFloat(document.getElementById('inputAmount').value);
@@ -454,13 +878,15 @@
   }
 
   async function togglePaid(id, currentPaid) {
+    const p = payments.find(x => x.id === id);
+    if (p) p.paid = !currentPaid;
+    renderPayments();
     try {
       await updatePayment(id, { paid: !currentPaid });
-      const p = payments.find(x => x.id === id);
-      if (p) p.paid = !currentPaid;
-      renderPayments();
       showToast(currentPaid ? '↩️ Отмечено как неоплачено' : '✅ Оплачено!');
     } catch (e) {
+      if (p) p.paid = currentPaid;
+      renderPayments();
       showToast('❌ Ошибка');
     }
   }
@@ -491,23 +917,354 @@
     }
   }
 
-  // ===== TOAST =====
-  function showToast(msg) {
-    const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.classList.add('show');
-    setTimeout(() => t.classList.remove('show'), 2500);
+  /* ================= ЦЕЛИ ================= */
+  let goals = [];
+  let goalsLoaded = false;
+  let goalFilter = 'year';
+
+  async function loadGoals() {
+    try {
+      goals = await sbFetch('GET', `goals?user_id=eq.${userId}&order=created_at.asc`) || [];
+      goalsLoaded = true;
+      renderGoals();
+    } catch (e) {
+      document.getElementById('goalsList').innerHTML =
+        '<div class="empty">❌ Ошибка загрузки целей</div>';
+    }
   }
 
-  // ===== INIT =====
-  async function init() {
+  function setGoalFilter(type) {
+    goalFilter = type;
+    document.getElementById('segYear').classList.toggle('active', type === 'year');
+    document.getElementById('segNearest').classList.toggle('active', type === 'nearest');
+    renderGoals();
+  }
+
+  function renderGoals() {
+    const container = document.getElementById('goalsList');
+    const list = goals
+      .filter(g => g.type === goalFilter)
+      .sort((a, b) => (a.completed === b.completed) ? 0 : (a.completed ? 1 : -1));
+
+    if (list.length === 0) {
+      container.innerHTML = '<div class="empty">Пока нет целей в этом разделе 🎯</div>';
+      return;
+    }
+
+    container.innerHTML = list.map(g => {
+      const meta = g.completed ? 'выполнено' : formatDeadline(g.deadline);
+      return `
+        <div class="goal-item ${g.completed ? 'completed' : ''}">
+          <div class="goal-check ${g.completed ? 'checked' : ''}" onclick="toggleGoal(${g.id}, ${g.completed})">
+            ${g.completed ? '✓' : ''}
+          </div>
+          <div class="goal-info">
+            <div class="goal-text">${g.text}</div>
+            ${meta ? `<div class="goal-deadline">${meta}</div>` : ''}
+          </div>
+          <button class="pay-delete" onclick="removeGoal(${g.id})">✕</button>
+        </div>`;
+    }).join('');
+  }
+
+  async function addGoal() {
+    const text = document.getElementById('goalText').value.trim();
+    const type = document.getElementById('goalType').value;
+    const deadline = document.getElementById('goalDeadline').value || null;
+
+    if (!text) { showToast('⚠️ Введи текст цели'); return; }
+
     try {
-      payments = await getPayments();
+      const result = await sbFetch('POST', 'goals',
+        { user_id: String(userId), text, type, deadline, completed: false });
+      goals.push(result[0]);
+      document.getElementById('goalText').value = '';
+      document.getElementById('goalDeadline').value = '';
+      setGoalFilter(type);
+      showToast('✅ Цель добавлена');
+    } catch (e) {
+      showToast('❌ Ошибка: ' + e.message);
+    }
+  }
+
+  async function toggleGoal(id, current) {
+    const g = goals.find(x => x.id === id);
+    if (g) g.completed = !current;
+    renderGoals();
+    try {
+      await sbFetch('PATCH', `goals?id=eq.${id}`, { completed: !current });
+      showToast(current ? '↩️ Снова в работе' : '🎉 Цель выполнена!');
+    } catch (e) {
+      if (g) g.completed = current;
+      renderGoals();
+      showToast('❌ Ошибка');
+    }
+  }
+
+  async function removeGoal(id) {
+    if (!confirm('Удалить цель?')) return;
+    try {
+      await sbFetch('DELETE', `goals?id=eq.${id}`);
+      goals = goals.filter(g => g.id !== id);
+      renderGoals();
+      showToast('🗑 Удалено');
+    } catch (e) {
+      showToast('❌ Ошибка');
+    }
+  }
+
+  /* ================= ФИНАНСЫ ================= */
+  let financeGoals = [];
+  let financeLoaded = false;
+
+  async function loadFinance() {
+    try {
+      financeGoals = await sbFetch('GET', `finance_goals?user_id=eq.${userId}&order=created_at.asc`) || [];
+      financeLoaded = true;
+      renderFinance();
+    } catch (e) {
+      document.getElementById('financeList').innerHTML =
+        '<div class="empty">❌ Ошибка загрузки целей</div>';
+    }
+  }
+
+  function renderFinance() {
+    const container = document.getElementById('financeList');
+
+    const totalTarget = financeGoals.reduce((s, g) => s + Number(g.target_amount), 0);
+    const totalSaved = financeGoals.reduce((s, g) => s + Number(g.current_amount), 0);
+    document.getElementById('finCount').textContent = financeGoals.length;
+    document.getElementById('finTarget').textContent = fmt(totalTarget);
+    document.getElementById('finSaved').textContent = fmt(totalSaved);
+
+    if (financeGoals.length === 0) {
+      container.innerHTML = '<div class="empty">Создай первую копилку 💰</div>';
+      return;
+    }
+
+    container.innerHTML = financeGoals.map(g => {
+      const target = Number(g.target_amount);
+      const current = Number(g.current_amount);
+      const pct = target > 0 ? Math.min(100, Math.round(current / target * 100)) : 0;
+      const done = pct >= 100;
+      return `
+        <div class="fin-card ${done ? 'complete' : ''}" id="fin-${g.id}">
+          <div class="fin-header">
+            <span class="fin-emoji">${g.emoji || '🎯'}</span>
+            <span class="fin-name">${g.name}</span>
+            ${done ? '<span class="fin-celebrate">🎉</span>' : ''}
+          </div>
+          <div class="fin-progress-track">
+            <div class="fin-progress-fill" data-pct="${pct}"></div>
+          </div>
+          <div class="fin-amounts">
+            <span class="pct">${pct}%</span>
+            <span class="amt">${fmt(current)} из ${fmt(target)}</span>
+          </div>
+          <div class="fin-actions">
+            <button class="fin-btn topup" onclick="showTopup(${g.id})">+ Пополнить</button>
+            <button class="fin-btn del" onclick="removeFinanceGoal(${g.id})">Удалить</button>
+          </div>
+          <div class="fin-topup-row hidden" id="topup-${g.id}">
+            <input type="number" min="0" placeholder="Сумма ₽" id="topup-input-${g.id}" />
+            <button class="fin-topup-ok" onclick="confirmTopup(${g.id})">Ок</button>
+          </div>
+        </div>`;
+    }).join('');
+
+    // анимация прогресс-баров
+    requestAnimationFrame(() => {
+      container.querySelectorAll('.fin-progress-fill').forEach(el => {
+        el.style.width = el.dataset.pct + '%';
+      });
+    });
+  }
+
+  async function addFinanceGoal() {
+    const name = document.getElementById('finName').value.trim();
+    const target = parseFloat(document.getElementById('finAmount').value);
+    const emoji = document.getElementById('finEmoji').value;
+
+    if (!name || !target || target <= 0) {
+      showToast('⚠️ Заполни название и сумму'); return;
+    }
+
+    try {
+      const result = await sbFetch('POST', 'finance_goals',
+        { user_id: String(userId), name, emoji, target_amount: target, current_amount: 0 });
+      financeGoals.push(result[0]);
+      document.getElementById('finName').value = '';
+      document.getElementById('finAmount').value = '';
+      renderFinance();
+      showToast('✅ Копилка создана');
+    } catch (e) {
+      showToast('❌ Ошибка: ' + e.message);
+    }
+  }
+
+  function showTopup(id) {
+    const row = document.getElementById('topup-' + id);
+    row.classList.toggle('hidden');
+    if (!row.classList.contains('hidden')) {
+      document.getElementById('topup-input-' + id).focus();
+    }
+  }
+
+  async function confirmTopup(id) {
+    const input = document.getElementById('topup-input-' + id);
+    const add = parseFloat(input.value);
+    if (!add || add <= 0) { showToast('⚠️ Введи сумму'); return; }
+
+    const g = financeGoals.find(x => x.id === id);
+    if (!g) return;
+    const prev = Number(g.current_amount);
+    g.current_amount = prev + add;
+    renderFinance();
+
+    try {
+      await sbFetch('PATCH', `finance_goals?id=eq.${id}`, { current_amount: g.current_amount });
+      const done = Number(g.current_amount) >= Number(g.target_amount);
+      showToast(done ? '🎉 Цель достигнута!' : '💰 Пополнено на ' + fmt(add));
+    } catch (e) {
+      g.current_amount = prev;
+      renderFinance();
+      showToast('❌ Ошибка');
+    }
+  }
+
+  async function removeFinanceGoal(id) {
+    if (!confirm('Удалить копилку?')) return;
+    try {
+      await sbFetch('DELETE', `finance_goals?id=eq.${id}`);
+      financeGoals = financeGoals.filter(g => g.id !== id);
+      renderFinance();
+      showToast('🗑 Удалено');
+    } catch (e) {
+      showToast('❌ Ошибка');
+    }
+  }
+
+  /* ================= ДАШБОРД ================= */
+  const quotes = [
+    "Каждый оплаченный счёт — шаг к свободе 💪",
+    "Маленькие шаги каждый день — большие результаты 🚀",
+    "Ты контролируешь свои финансы, не они тебя 🔥",
+    "Цель без плана — просто мечта. У тебя есть план ✅",
+    "Откладывай сегодня — наслаждайся завтра 💰"
+  ];
+
+  async function renderDashboard() {
+    // дата
+    const weekdays = ['Воскресенье','Понедельник','Вторник','Среда','Четверг','Пятница','Суббота'];
+    const monthsGen = ['января','февраля','марта','апреля','мая','июня',
+                       'июля','августа','сентября','октября','ноября','декабря'];
+    const now = new Date();
+    document.getElementById('dashDate').textContent =
+      `${weekdays[now.getDay()]}, ${now.getDate()} ${monthsGen[now.getMonth()]} ${now.getFullYear()}`;
+
+    // цитата
+    document.getElementById('dashQuote').textContent =
+      quotes[Math.floor(Math.random() * quotes.length)];
+
+    // подгружаем данные других вкладок при необходимости
+    const jobs = [];
+    if (!goalsLoaded) jobs.push(loadGoals());
+    if (!financeLoaded) jobs.push(loadFinance());
+    if (jobs.length) { try { await Promise.all(jobs); } catch (e) {} }
+
+    renderDashPayments();
+    renderDashGoals();
+    renderDashFinance();
+  }
+
+  function renderDashPayments() {
+    const el = document.getElementById('dashPayments');
+    if (payments.length === 0) {
+      el.innerHTML = '<div class="empty" style="padding:10px">Нет платежей</div>';
+      return;
+    }
+    const total = payments.length;
+    const paid = payments.filter(p => p.paid).length;
+    const pct = total > 0 ? Math.round(paid / total * 100) : 0;
+    const upcoming = payments.filter(p => !p.paid)
+      .sort((a, b) => a.day_of_month - b.day_of_month).slice(0, 3);
+
+    el.innerHTML = `
+      <div class="dash-row">
+        <span class="label">Оплачено</span>
+        <span class="val">${paid} из ${total}</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+      ${upcoming.length ? '<div style="margin-top:14px"></div>' : ''}
+      ${upcoming.map(p => `
+        <div class="dash-row">
+          <span class="label">${p.day_of_month} числа · ${p.name}</span>
+          <span class="val" style="color:var(--accent)">${fmt(p.amount)}</span>
+        </div>`).join('')}
+    `;
+  }
+
+  function renderDashGoals() {
+    const el = document.getElementById('dashGoals');
+    if (goals.length === 0) {
+      el.innerHTML = '<div class="empty" style="padding:10px">Нет целей</div>';
+      return;
+    }
+    const total = goals.length;
+    const done = goals.filter(g => g.completed).length;
+    const pct = total > 0 ? Math.round(done / total * 100) : 0;
+    el.innerHTML = `
+      <div class="dash-row">
+        <span class="label">Выполнено</span>
+        <span class="val">${done} из ${total}</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+    `;
+  }
+
+  function renderDashFinance() {
+    const el = document.getElementById('dashFinance');
+    if (financeGoals.length === 0) {
+      el.innerHTML = '<div class="empty" style="padding:10px">Нет копилок</div>';
+      return;
+    }
+    const totalTarget = financeGoals.reduce((s, g) => s + Number(g.target_amount), 0);
+    const totalSaved = financeGoals.reduce((s, g) => s + Number(g.current_amount), 0);
+    const overall = totalTarget > 0 ? Math.round(totalSaved / totalTarget * 100) : 0;
+
+    el.innerHTML = financeGoals.map(g => {
+      const target = Number(g.target_amount);
+      const current = Number(g.current_amount);
+      const pct = target > 0 ? Math.min(100, Math.round(current / target * 100)) : 0;
+      return `
+        <div class="dash-mini">
+          <div class="mini-top">
+            <span class="mini-name">${g.emoji || '🎯'} ${g.name}</span>
+            <span class="mini-pct">${pct}%</span>
+          </div>
+          <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+        </div>`;
+    }).join('') + `
+      <div class="dash-row" style="margin-top:12px;border-top:1px solid var(--border);padding-top:12px">
+        <span class="label">Всего накоплено</span>
+        <span class="val" style="color:var(--green)">${fmt(totalSaved)} / ${fmt(totalTarget)} (${overall}%)</span>
+      </div>`;
+  }
+
+  /* ================= INIT ================= */
+  async function init() {
+    // восстановить активную вкладку
+    const saved = localStorage.getItem('activeTab') || 'tab-payments';
+
+    try {
+      payments = await getPayments() || [];
       renderPayments();
     } catch (e) {
       document.getElementById('paymentsList').innerHTML =
         '<div class="empty">❌ Ошибка подключения к базе данных</div>';
     }
+
+    switchTab(saved);
   }
 
   init();
