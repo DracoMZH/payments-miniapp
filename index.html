@@ -468,12 +468,20 @@
       justify-content: space-between;
       align-items: center;
       font-size: 0.85em;
-      margin-bottom: 12px;
+      margin-bottom: 6px;
     }
 
     .fin-amounts .pct { font-weight: 700; color: var(--accent); }
     .fin-card.complete .fin-amounts .pct { color: var(--green); }
     .fin-amounts .amt { color: var(--muted); }
+
+    .fin-remaining {
+      font-size: 0.8em;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+    .fin-remaining b { color: var(--red); font-weight: 600; }
+    .fin-card.complete .fin-remaining { color: var(--green); }
 
     .fin-actions { display: flex; gap: 8px; }
 
@@ -599,6 +607,10 @@
       <div class="progress-bar">
         <div class="progress-fill" id="progressFill" style="width:0%"></div>
       </div>
+      <div style="display:flex;justify-content:space-between;font-size:0.78em;margin-top:8px;color:var(--muted);">
+        <span>Оплачено</span>
+        <span>Осталось внести: <span style="color:var(--red);font-weight:600;" id="statRemaining">₽0</span></span>
+      </div>
     </div>
   </div>
 
@@ -668,9 +680,13 @@
       <div class="stat-label">Накоплено</div>
       <div class="stat-value green" id="finSaved">₽0</div>
     </div>
-    <div class="stat-card full">
-      <div class="stat-label">Общая сумма целей</div>
+    <div class="stat-card">
+      <div class="stat-label">Общая сумма</div>
       <div class="stat-value blue" id="finTarget">₽0</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Осталось накопить</div>
+      <div class="stat-value red" id="finRemaining">₽0</div>
     </div>
   </div>
 
@@ -846,6 +862,7 @@
     document.getElementById('statCount').textContent = payments.length;
     document.getElementById('statPaid').textContent = fmt(paid);
     document.getElementById('statPercent').textContent = pct + '%';
+    document.getElementById('statRemaining').textContent = fmt(total - paid);
     document.getElementById('progressFill').style.width = pct + '%';
 
     const months = ['Январь','Февраль','Март','Апрель','Май','Июнь',
@@ -1036,6 +1053,7 @@
     document.getElementById('finCount').textContent = financeGoals.length;
     document.getElementById('finTarget').textContent = fmt(totalTarget);
     document.getElementById('finSaved').textContent = fmt(totalSaved);
+    document.getElementById('finRemaining').textContent = fmt(Math.max(0, totalTarget - totalSaved));
 
     if (financeGoals.length === 0) {
       container.innerHTML = '<div class="empty">Создай первую копилку 💰</div>';
@@ -1060,6 +1078,9 @@
           <div class="fin-amounts">
             <span class="pct">${pct}%</span>
             <span class="amt">${fmt(current)} из ${fmt(target)}</span>
+          </div>
+          <div class="fin-remaining">
+            ${done ? '✅ Цель достигнута' : 'Осталось накопить: <b>' + fmt(target - current) + '</b>'}
           </div>
           <div class="fin-actions">
             <button class="fin-btn topup" onclick="showTopup(${g.id})">+ Пополнить</button>
